@@ -44,6 +44,7 @@ def main(config_file):
         controller = contclass(**cfg['controller_kwargs'])
     else:
         controller = contclass()
+    controller.connect(cfg['device_host'], cfg['device_port'])
 
     channels = cfg['log_channels']
     device = cfg['device']
