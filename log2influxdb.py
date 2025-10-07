@@ -40,7 +40,10 @@ def main(config_file):
     if logger:
         logger.info('Connecting to %s', cfg['controller_module'])
     contclass = getattr(contmod, cfg['controller_class'])
-    controller = contclass(**cfg['controller_kwargs'])
+    if cfg['controller_kwargs'] is not None:
+        controller = contclass(**cfg['controller_kwargs'])
+    else:
+        controller = contclass()
 
     channels = cfg['log_channels']
     device = cfg['device']
