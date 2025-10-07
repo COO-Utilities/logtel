@@ -6,10 +6,12 @@
   "db_channel": "Temperature",
   "log_channels": {
     "2A": {"field":  "temperature",
-        "get_value": "get_value",
+        "get_value": "get_channel_value",
+        "value_type": "float",
         "units": "degC"},
     "Out 1": {"field": "output",
-        "get_value": "get_value",
+        "get_value": "get_channel_value",
+        "value_type": "float",
         "units":  "Amps"}
   },
   "controller_module": "controller",

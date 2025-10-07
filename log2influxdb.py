@@ -61,19 +61,29 @@ def main(config_file):
                 write_api = db_client.write_api(write_options=SYNCHRONOUS)
 
                 for chan in channels:
-                    get_value = getattr(controller, cfg['log_channels'][chan]['get_value'])
+                    expected_type = cfg['log_channels'][chan]['value_type']
+                    get_value_function_name = cfg['log_channels'][chan]['get_value']
+                    get_value = getattr(controller, get_value_function_name)
                     value = get_value(chan)
-                    point = (
-                        Point(device)
-                        .field(channels[chan]['field'], value)
-                        .tag("units", channels[chan]['units'])
-                        .tag("channel", f"{cfg['db_channel']}")
-                    )
-                    write_api.write(bucket=cfg['db_bucket'], org=cfg['db_org'], record=point)
-                    if verbose:
-                        print(point)
-                    if logger:
-                        logger.debug(point)
+                    # pylint: disable=eval-used
+                    if isinstance(value, eval(expected_type)):
+                        point = (
+                            Point(device)
+                            .field(channels[chan]['field'], value)
+                            .tag("units", channels[chan]['units'])
+                            .tag("channel", f"{cfg['db_channel']}")
+                        )
+                        write_api.write(bucket=cfg['db_bucket'], org=cfg['db_org'], record=point)
+                        if verbose:
+                            print(point)
+                        if logger:
+                            logger.debug(point)
+                    else:
+                        if verbose:
+                            print(f"Type error, expected {expected_type}, got {type(value)}")
+                        if logger:
+                            logger.error("Type error, expected %s, got %s",
+                                         expected_type, type(value))
 
                 # Close db connection
                 if verbose:
