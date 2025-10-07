@@ -1,0 +1,24 @@
+{
+  "db_url": "localhost:8086",
+  "db_token": "",
+  "db_org": "Organization",
+  "db_bucket": "bucket",
+  "db_channel": "Temperature",
+  "log_channels": {
+    "2A": {"field":  "temperature",
+        "get_value": "get_value",
+        "units": "degC"},
+    "Out 1": {"field": "output",
+        "get_value": "get_value",
+        "units":  "Amps"}
+  },
+  "controller_module": "controller",
+  "controller_class": "controller_class",
+  "controller_kwargs": "",
+  "device": "device",
+  "device_host": "hostname",
+  "device_port": 23,
+  "interval_secs": 30,
+  "verbose": 0,
+  "logfile": ""
+}

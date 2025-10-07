@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "logtel"
+version = "0.1.0"
+description = "Log Telemetry to InfluxDB"
+authors = [
+    { name="Michael Langmayr", email="langmayr@caltech.edu" },
+    { name="Don Neill", email="neill@astro.caltech.edu" },
+    { name="Prakriti Gupta", email="pgupta@astro.caltech.edu" }
+]
+readme = "README.md"
+requires-python = ">=3.7"
+dependencies = [
+    "keyring",
+    "pipython",
+    "pyserial",
+    "influxdb_client",
+    "urllib3",
+    "libximc",
+    "pytest"
+]
+[tool.pytest.ini_options]
+pythonpath = [
+    "."
+]
