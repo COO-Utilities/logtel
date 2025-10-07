@@ -40,7 +40,7 @@ def main(config_file):
     if logger:
         logger.info('Connecting to %s', cfg['controller_module'])
     contclass = getattr(contmod, cfg['controller_class'])
-    if cfg['controller_kwargs'] is not None:
+    if cfg['controller_kwargs']:
         controller = contclass(**cfg['controller_kwargs'])
     else:
         controller = contclass()
