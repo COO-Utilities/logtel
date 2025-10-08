@@ -69,7 +69,10 @@ def main(config_file):
                     expected_type = cfg['log_channels'][chan]['value_type']
                     get_value_function_name = cfg['log_channels'][chan]['get_value']
                     get_value = getattr(controller, get_value_function_name)
-                    value = get_value(chan)
+                    if cfg['log_channels'][chan]['channel_name']:
+                        value = get_value(cfg['log_channels'][chan]['channel_name'])
+                    else:
+                        value = get_value()
                     # pylint: disable=eval-used
                     if isinstance(value, eval(expected_type)):
                         point = (

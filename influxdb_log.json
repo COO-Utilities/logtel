@@ -5,11 +5,15 @@
   "db_bucket": "bucket",
   "db_channel": "Temperature",
   "log_channels": {
-    "2A": {"field":  "temperature",
+    "2A": {
+        "channel_name": "2A",
+        "field":  "temperature",
         "get_value": "get_channel_value",
         "value_type": "float",
         "units": "degC"},
-    "Out 1": {"field": "output",
+    "Out 1": {
+        "channel_name": "Out1",
+        "field": "output",
         "get_value": "get_channel_value",
         "value_type": "float",
         "units":  "Amps"}
