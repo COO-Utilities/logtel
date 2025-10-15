@@ -20,25 +20,31 @@ def main(config_file):
 
     contmod = importlib.import_module(cfg['controller_module'])
 
-    # Do we have a logfile?
+    # set up logging
+    logfile = cfg['logfile']
+    if logfile is None:
+        logfile = __name__.rsplit(".", 1)[-1]
+    logger = logging.getLogger(logfile)
+    if verbose:
+        logger.setLevel(logging.DEBUG)
+    else:
+        logger.setLevel(logging.INFO)
+    # log to console by default
+    console_formatter = logging.Formatter(
+        '%(asctime)s - %(levelname)s - %(message)s')
+    console_handler = logging.StreamHandler()
+    console_handler.setFormatter(console_formatter)
+    logger.addHandler(console_handler)
+    # log to file if requested
     if cfg['logfile'] is not None:
-        # log to a file
-        logger = logging.getLogger(cfg['logfile'])
-        if verbose:
-            logger.setLevel(logging.DEBUG)
-        else:
-            logger.setLevel(logging.INFO)
-        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-        file_handler = logging.FileHandler(cfg['logfile'])
+        formatter = logging.Formatter(
+            "%(asctime)s - %(levelname)s - %(funcName)s() - %(message)s"
+        )
+        file_handler = logging.FileHandler(logfile if ".log" in logfile else logfile + ".log")
         file_handler.setFormatter(formatter)
         logger.addHandler(file_handler)
-    else:
-        logger = None
 
-    if verbose:
-        print("Connecting to " + cfg['controller_module'])
-    if logger:
-        logger.info('Connecting to %s', cfg['controller_module'])
+    logger.info('Connecting to %s', cfg['controller_module'])
     contclass = getattr(contmod, cfg['controller_class'])
     if cfg['controller_kwargs']:
         controller = contclass(**cfg['controller_kwargs'])
@@ -57,10 +63,7 @@ def main(config_file):
         while True:
             try:
                 # Connect to InfluxDB
-                if verbose:
-                    print("Connecting to InfluxDB...")
-                if logger:
-                    logger.info('Connecting to InfluxDB...')
+                logger.info('Connecting to InfluxDB...')
                 db_client = InfluxDBClient(url=cfg['db_url'], token=cfg['db_token'],
                                            org=cfg['db_org'])
                 write_api = db_client.write_api(write_options=SYNCHRONOUS)
@@ -82,46 +85,28 @@ def main(config_file):
                             .tag("channel", f"{cfg['db_channel']}")
                         )
                         write_api.write(bucket=cfg['db_bucket'], org=cfg['db_org'], record=point)
-                        if verbose:
-                            print(point)
-                        if logger:
-                            logger.debug(point)
+                        logger.debug(point)
                     else:
-                        if verbose:
-                            print(f"Type error, expected {expected_type}, got {type(value)}")
-                        if logger:
-                            logger.error("Type error, expected %s, got %s",
-                                         expected_type, type(value))
+                        logger.error("Type error, expected %s, got %s",
+                                     expected_type, type(value))
 
                 # Close db connection
-                if verbose:
-                    print("Closing connection to InfluxDB...")
-                if logger:
-                    logger.info('Closing connection to InfluxDB...')
+                logger.info('Closing connection to InfluxDB...')
                 db_client.close()
                 db_client = None
 
             # Handle exceptions
             except ReadTimeoutError as e:
-                print(f"ReadTimeoutError: {e}, will retry.")
-                if logger:
-                    logger.critical("ReadTimeoutError: %s, will retry.", e)
+                logger.critical("ReadTimeoutError: %s, will retry.", e)
             except Exception as e:
-                print(f"Unexpected error: {e}, will retry.")
-                if logger:
-                    logger.critical("Unexpected error: %s, will retry.", e)
+                logger.critical("Unexpected error: %s, will retry.", e)
 
             # Sleep for interval_secs
-            if verbose:
-                print(f"Waiting {cfg['interval_secs']:d} seconds...")
-            if logger:
-                logger.info("Waiting %d seconds...", cfg['interval_secs'])
+            logger.info("Waiting %d seconds...", cfg['interval_secs'])
             time.sleep(cfg['interval_secs'])
 
     except KeyboardInterrupt:
-        print("\nShutting down InfluxDB logging...")
-        if logger:
-            logger.critical("Shutting down InfluxDB logging...")
+        logger.critical("Shutting down InfluxDB logging...")
         if db_client:
             db_client.close()
         controller.disconnect()
