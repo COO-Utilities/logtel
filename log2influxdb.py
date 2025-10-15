@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """log telemetry to influxdb"""
 import importlib
 import time
