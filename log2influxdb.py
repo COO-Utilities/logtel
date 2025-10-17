@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
-"""log telemetry to influxdb"""
+"""log telemetry to influxdb
+
+Assumes controller module has implemented the abstract methods in hardware_device_base module.
+
+See https://github.com/COO-Utilities/hardware_device_base for more info.
+"""
 import importlib
 import time
 import sys
@@ -12,6 +17,7 @@ from urllib3.exceptions import ReadTimeoutError
 
 def main(config_file):
     """Read config file for setup info and start logging to InfluxDB."""
+    # pylint: disable=too-many-branches, too-many-statements, too-many-locals
 
     # read the config file
     with open(config_file, encoding='utf-8') as cfg_file:
@@ -54,7 +60,7 @@ def main(config_file):
     if cfg['device_host'] and cfg['device_port']:
         controller.connect(cfg['device_host'], cfg['device_port'])
 
-    channels = cfg['log_channels']
+    items = cfg['log_items']
     device = cfg['device']
 
     # Try/except to catch exceptions
@@ -69,20 +75,16 @@ def main(config_file):
                                            org=cfg['db_org'])
                 write_api = db_client.write_api(write_options=SYNCHRONOUS)
 
-                for chan in channels:
-                    expected_type = cfg['log_channels'][chan]['value_type']
-                    get_value_function_name = cfg['log_channels'][chan]['get_value']
-                    get_value = getattr(controller, get_value_function_name)
-                    if cfg['log_channels'][chan]['channel_name']:
-                        value = get_value(cfg['log_channels'][chan]['channel_name'])
-                    else:
-                        value = get_value()
+                for item in items:
+                    expected_type = items[item]['value_type']
+                    value = controller.get_atomic_value(item)
+
                     # pylint: disable=eval-used
                     if isinstance(value, eval(expected_type)):
                         point = (
                             Point(device)
-                            .field(channels[chan]['field'], value)
-                            .tag("units", channels[chan]['units'])
+                            .field(items[item]['field'], value)
+                            .tag("units", items[item]['units'])
                             .tag("channel", f"{cfg['db_channel']}")
                         )
                         write_api.write(bucket=cfg['db_bucket'], org=cfg['db_org'], record=point)
