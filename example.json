@@ -1,0 +1,26 @@
+{
+  "db_url": "influxdb.host.edu:8086",
+  "db_token": "AVeryLongStringThatIsAnInfluxDBToken",
+  "db_org": "YourOrganization",
+  "db_bucket": "YourBucket",
+  "db_channel": "blue_etalon",
+  "log_items": {
+    "2A": {
+        "field":  "temperature",
+        "value_type": "float",
+        "units": "degC"},
+    "Out 1": {
+        "field": "output",
+        "value_type": "float",
+        "units":  "Amps"}
+  },
+  "controller_module": "ptc10",
+  "controller_class": "PTC10",
+  "controller_kwargs": "",
+  "device": "srs_ptc10",
+  "device_host": "blueettemp",
+  "device_port": 23,
+  "interval_secs": 30,
+  "verbose": 1,
+  "logfile": "blue_cal_srs.log"
+}
