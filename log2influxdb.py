@@ -62,6 +62,10 @@ def main(config_file):
 
     items = cfg['log_items']
     device = cfg['device']
+    if 'log_locations' in cfg:
+        locations = cfg['log_locations']
+    else:
+        locations = None
 
     # Try/except to catch exceptions
     db_client = None
@@ -78,20 +82,44 @@ def main(config_file):
                 for item in items:
                     expected_type = items[item]['value_type']
                     value = controller.get_atomic_value(item)
-
-                    # pylint: disable=eval-used
-                    if isinstance(value, eval(expected_type)):
-                        point = (
-                            Point(device)
-                            .field(items[item]['field'], value)
-                            .tag("units", items[item]['units'])
-                            .tag("channel", f"{cfg['db_channel']}")
-                        )
-                        write_api.write(bucket=cfg['db_bucket'], org=cfg['db_org'], record=point)
-                        logger.debug(point)
+                    if isinstance(value, list):
+                        if all(isinstance(datum, eval(expected_type)) for datum in value):
+                            for num, datum in enumerate(value):
+                                if locations:
+                                    location = locations[str(num + 1)]
+                                    point = (
+                                        Point(device)
+                                        .field(items[item]['field']+str(num+1), datum)
+                                        .tag("location", location)
+                                        .tag("units", items[item]['units'])
+                                        .tag("channel", f"{cfg['db_channel']}")
+                                    )
+                                else:
+                                    point = (
+                                        Point(device)
+                                        .field(items[item]['field'] + str(num + 1), datum)
+                                        .tag("units", items[item]['units'])
+                                        .tag("channel", f"{cfg['db_channel']}")
+                                    )
+                                write_api.write(bucket=cfg['db_bucket'], org=cfg['db_org'], record=point)
+                                logger.debug(point)
+                        else:
+                            logger.error("Type error, expected %s, got %s",
+                                         expected_type, type(value[0]))
                     else:
-                        logger.error("Type error, expected %s, got %s",
-                                     expected_type, type(value))
+                        # pylint: disable=eval-used
+                        if isinstance(value, eval(expected_type)):
+                            point = (
+                                Point(device)
+                                .field(items[item]['field'], value)
+                                .tag("units", items[item]['units'])
+                                .tag("channel", f"{cfg['db_channel']}")
+                            )
+                            write_api.write(bucket=cfg['db_bucket'], org=cfg['db_org'], record=point)
+                            logger.debug(point)
+                        else:
+                            logger.error("Type error, expected %s, got %s",
+                                         expected_type, type(value))
 
                 # Close db connection
                 logger.info('Closing connection to InfluxDB...')
