@@ -21,5 +21,8 @@ pip install .
 
 ## Usage
 
-Copy influx_db.json file and edit to configure for telemetry.  See example.json
-for an example of how to configure.
+If the controller universal getter (get_atomic_value) returns a single value, then the
+`single_value.json` file is a good place to start.  Just edit it to configure for your telemetry.
+If the getter returns a list, and you want to specify a location for each sensor in a list then use the
+`multiple_value.json` file and edit it to include locations.  The locations are optional and not
+required.  A more specific example without locations can be found in `example.json`.
