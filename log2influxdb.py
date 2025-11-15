@@ -81,10 +81,15 @@ def main(config_file):
 
                 for item in items:
                     expected_type = items[item]['value_type']
+                    # Universal getter
                     value = controller.get_atomic_value(item)
+                    # Deal with a list of values
                     if isinstance(value, list):
+                        # Does our list have the correct types?
                         if all(isinstance(datum, eval(expected_type)) for datum in value):
+                            # Loop over our list
                             for num, datum in enumerate(value):
+                                # Are locations specified?
                                 if locations:
                                     location = locations[str(num + 1)]
                                     point = (
@@ -94,6 +99,7 @@ def main(config_file):
                                         .tag("units", items[item]['units'])
                                         .tag("channel", f"{cfg['db_channel']}")
                                     )
+                                # No locations specified
                                 else:
                                     point = (
                                         Point(device)
@@ -101,13 +107,16 @@ def main(config_file):
                                         .tag("units", items[item]['units'])
                                         .tag("channel", f"{cfg['db_channel']}")
                                     )
+                                # Write to database and log
                                 write_api.write(bucket=cfg['db_bucket'], org=cfg['db_org'], record=point)
                                 logger.debug(point)
                         else:
                             logger.error("Type error, expected %s, got %s",
                                          expected_type, type(value[0]))
+                    # Single value returned from getter
                     else:
                         # pylint: disable=eval-used
+                        # Is our value of the expected type?
                         if isinstance(value, eval(expected_type)):
                             point = (
                                 Point(device)
@@ -115,6 +124,7 @@ def main(config_file):
                                 .tag("units", items[item]['units'])
                                 .tag("channel", f"{cfg['db_channel']}")
                             )
+                            # Write to database and log
                             write_api.write(bucket=cfg['db_bucket'], org=cfg['db_org'], record=point)
                             logger.debug(point)
                         else:
