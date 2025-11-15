@@ -91,7 +91,10 @@ def main(config_file):
                             for num, datum in enumerate(value):
                                 # Are locations specified?
                                 if locations:
-                                    location = locations[str(num + 1)]
+                                    if str(num + 1) in locations:
+                                        location = locations[str(num + 1)]
+                                    else:
+                                        location = "Unknown"
                                     point = (
                                         Point(device)
                                         .field(items[item]['field']+str(num+1), datum)
@@ -155,6 +158,6 @@ def main(config_file):
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        print("Usage: python log2influxdb.py <influxdb_log.json>")
+        print("Usage: python log2influxdb.py <your_edited_configuration.json>")
         sys.exit(0)
     main(sys.argv[1])
