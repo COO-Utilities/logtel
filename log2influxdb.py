@@ -58,7 +58,15 @@ def main(config_file):
     else:
         controller = contclass()
     if cfg['device_host'] and cfg['device_port']:
-        controller.connect(cfg['device_host'], cfg['device_port'])
+        if 'username' in cfg and 'password' in cfg:
+            controller.connect(cfg['device_host'], cfg['device_port'],
+                               username=cfg['username'], password=cfg['password'])
+        else:
+            controller.connect(cfg['device_host'], cfg['device_port'])
+
+    # do we need to initialize?
+    if hasattr(controller, 'initialize'):
+        controller.initialize()
 
     items = cfg['log_items']
     device = cfg['device']
