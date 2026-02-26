@@ -5,6 +5,7 @@ Assumes controller module has implemented the abstract methods in hardware_devic
 
 See https://github.com/COO-Utilities/hardware_device_base for more info.
 """
+import builtins
 import importlib
 import time
 import sys
@@ -88,13 +89,13 @@ def main(config_file):
                 write_api = db_client.write_api(write_options=SYNCHRONOUS)
 
                 for item in items:
-                    expected_type = items[item]['value_type']
+                    expected_type = getattr(builtins, items[item]['value_type'])
                     # Universal getter
                     value = controller.get_atomic_value(item)
                     # Deal with a list of values
                     if isinstance(value, list):
                         # Does our list have the correct types?
-                        if all(isinstance(datum, eval(expected_type)) for datum in value):
+                        if all(isinstance(datum, expected_type) for datum in value):
                             # Loop over our list
                             for num, datum in enumerate(value):
                                 # Are locations specified?
@@ -119,7 +120,8 @@ def main(config_file):
                                         .tag("channel", f"{cfg['db_channel']}")
                                     )
                                 # Write to database and log
-                                write_api.write(bucket=cfg['db_bucket'], org=cfg['db_org'], record=point)
+                                write_api.write(bucket=cfg['db_bucket'], org=cfg['db_org'],
+                                                record=point)
                                 logger.debug(point)
                         else:
                             logger.error("Type error, expected %s, got %s",
@@ -128,7 +130,7 @@ def main(config_file):
                     else:
                         # pylint: disable=eval-used
                         # Is our value of the expected type?
-                        if isinstance(value, eval(expected_type)):
+                        if isinstance(value, expected_type):
                             point = (
                                 Point(device)
                                 .field(items[item]['field'], value)
@@ -136,7 +138,8 @@ def main(config_file):
                                 .tag("channel", f"{cfg['db_channel']}")
                             )
                             # Write to database and log
-                            write_api.write(bucket=cfg['db_bucket'], org=cfg['db_org'], record=point)
+                            write_api.write(bucket=cfg['db_bucket'], org=cfg['db_org'],
+                                            record=point)
                             logger.debug(point)
                         else:
                             logger.error("Type error, expected %s, got %s",
