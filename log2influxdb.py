@@ -163,14 +163,19 @@ def main(config_file):
             logger.info("Waiting %d seconds...", cfg['interval_secs'])
             time.sleep(cfg['interval_secs'])
             if reconnect_to_device:
+                logger.info("Disconnecting from device...")
                 controller.disconnect()
                 time.sleep(2.0)
                 if cfg['device_host'] and cfg['device_port']:
+                    logger.info("Reconnecting to device...")
                     if 'username' in cfg and 'password' in cfg:
+                        logger.info("with username and password")
                         controller.connect(cfg['device_host'], cfg['device_port'],
                                            username=cfg['username'], password=cfg['password'])
                     else:
+                        logger.info("with just host and port")
                         controller.connect(cfg['device_host'], cfg['device_port'])
+                    logger.info("Reconnected")
                 reconnect_to_device = False
 
     except KeyboardInterrupt:
