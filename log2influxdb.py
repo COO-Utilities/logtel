@@ -63,6 +63,9 @@ def main(config_file):
                                username=cfg['username'], password=cfg['password'])
         else:
             controller.connect(cfg['device_host'], cfg['device_port'])
+    else:
+        logger.error("Connection not configured: must set device_host and device_port.")
+        sys.exit(1)
 
     # do we need to initialize?
     if hasattr(controller, 'initialize'):
@@ -78,6 +81,8 @@ def main(config_file):
     # Try/except to catch exceptions
     db_client = None
     try:
+        # Do we need to reconnect to the device?
+        reconnect_to_device = False
         # Loop until ctrl-C
         while True:
             try:
@@ -88,13 +93,13 @@ def main(config_file):
                 write_api = db_client.write_api(write_options=SYNCHRONOUS)
 
                 for item in items:
-                    expected_type = items[item]['value_type']
+                    expected_type = getattr(__builtins__, items[item]['value_type'])
                     # Universal getter
                     value = controller.get_atomic_value(item)
                     # Deal with a list of values
                     if isinstance(value, list):
                         # Does our list have the correct types?
-                        if all(isinstance(datum, eval(expected_type)) for datum in value):
+                        if all(isinstance(datum, expected_type) for datum in value):
                             # Loop over our list
                             for num, datum in enumerate(value):
                                 # Are locations specified?
@@ -119,7 +124,8 @@ def main(config_file):
                                         .tag("channel", f"{cfg['db_channel']}")
                                     )
                                 # Write to database and log
-                                write_api.write(bucket=cfg['db_bucket'], org=cfg['db_org'], record=point)
+                                write_api.write(bucket=cfg['db_bucket'], org=cfg['db_org'],
+                                                record=point)
                                 logger.debug(point)
                         else:
                             logger.error("Type error, expected %s, got %s",
@@ -128,7 +134,7 @@ def main(config_file):
                     else:
                         # pylint: disable=eval-used
                         # Is our value of the expected type?
-                        if isinstance(value, eval(expected_type)):
+                        if isinstance(value, expected_type):
                             point = (
                                 Point(device)
                                 .field(items[item]['field'], value)
@@ -136,7 +142,8 @@ def main(config_file):
                                 .tag("channel", f"{cfg['db_channel']}")
                             )
                             # Write to database and log
-                            write_api.write(bucket=cfg['db_bucket'], org=cfg['db_org'], record=point)
+                            write_api.write(bucket=cfg['db_bucket'], org=cfg['db_org'],
+                                            record=point)
                             logger.debug(point)
                         else:
                             logger.error("Type error, expected %s, got %s",
@@ -150,12 +157,41 @@ def main(config_file):
             # Handle exceptions
             except ReadTimeoutError as e:
                 logger.critical("ReadTimeoutError: %s, will retry.", e)
+                reconnect_to_device = True
             except Exception as e:
                 logger.critical("Unexpected error: %s, will retry.", e)
+                reconnect_to_device = True
 
             # Sleep for interval_secs
             logger.info("Waiting %d seconds...", cfg['interval_secs'])
             time.sleep(cfg['interval_secs'])
+            if reconnect_to_device:
+                logger.info("Disconnecting from device...")
+                controller.disconnect()
+                time.sleep(2.0)
+                controller = None
+                logger.info("Re-instantiating controller...")
+                if cfg['controller_kwargs']:
+                    controller = contclass(**cfg['controller_kwargs'])
+                else:
+                    controller = contclass()
+                if cfg['device_host'] and cfg['device_port']:
+                    logger.info("Reconnecting to device...")
+                    if 'username' in cfg and 'password' in cfg:
+                        logger.info("with username and password")
+                        controller.connect(cfg['device_host'], cfg['device_port'],
+                                           username=cfg['username'], password=cfg['password'])
+                    else:
+                        logger.info("with just host and port")
+                        controller.connect(cfg['device_host'], cfg['device_port'])
+                    if controller.is_connected():
+                        logger.info("Reconnected")
+                        reconnect_to_device = False
+                    else:
+                        logger.error("Failed to connect to device")
+                        reconnect_to_device = True
+                else:
+                    logger.error("Connection not configured, cannot reconnect")
 
     except KeyboardInterrupt:
         logger.critical("Shutting down InfluxDB logging...")
