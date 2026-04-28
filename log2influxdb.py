@@ -63,6 +63,9 @@ def main(config_file):
                                username=cfg['username'], password=cfg['password'])
         else:
             controller.connect(cfg['device_host'], cfg['device_port'])
+    else:
+        logger.error("Connection not configured: must set device_host and device_port.")
+        sys.exit(1)
 
     # do we need to initialize?
     if hasattr(controller, 'initialize'):
@@ -166,6 +169,12 @@ def main(config_file):
                 logger.info("Disconnecting from device...")
                 controller.disconnect()
                 time.sleep(2.0)
+                controller = None
+                logger.info("Re-instantiating controller...")
+                if cfg['controller_kwargs']:
+                    controller = contclass(**cfg['controller_kwargs'])
+                else:
+                    controller = contclass()
                 if cfg['device_host'] and cfg['device_port']:
                     logger.info("Reconnecting to device...")
                     if 'username' in cfg and 'password' in cfg:
@@ -175,8 +184,14 @@ def main(config_file):
                     else:
                         logger.info("with just host and port")
                         controller.connect(cfg['device_host'], cfg['device_port'])
-                    logger.info("Reconnected")
-                reconnect_to_device = False
+                    if controller.is_connected():
+                        logger.info("Reconnected")
+                        reconnect_to_device = False
+                    else:
+                        logger.error("Failed to connect to device")
+                        reconnect_to_device = True
+                else:
+                    logger.error("Connection not configured, cannot reconnect")
 
     except KeyboardInterrupt:
         logger.critical("Shutting down InfluxDB logging...")
