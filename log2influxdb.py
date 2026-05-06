@@ -146,8 +146,12 @@ def main(config_file):
                                             record=point)
                             logger.debug(point)
                         else:
-                            logger.error("Type error, expected %s, got %s",
-                                         expected_type, type(value))
+                            if isinstance(value, type(None)):
+                                logger.error("Type error, NoneType received, will reconnect.")
+                                reconnect_to_device = True
+                            else:
+                                logger.error("Type error, expected %s, got %s",
+                                             expected_type, type(value))
 
                 # Close db connection
                 logger.info('Closing connection to InfluxDB...')
@@ -169,7 +173,6 @@ def main(config_file):
                 logger.info("Disconnecting from device...")
                 controller.disconnect()
                 time.sleep(2.0)
-                controller = None
                 logger.info("Re-instantiating controller...")
                 if cfg['controller_kwargs']:
                     controller = contclass(**cfg['controller_kwargs'])
