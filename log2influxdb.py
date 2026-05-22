@@ -188,6 +188,9 @@ def main(config_file):
                         logger.info("with just host and port")
                         controller.connect(cfg['device_host'], cfg['device_port'])
                     if controller.is_connected():
+                        # do we need to initialize?
+                        if hasattr(controller, 'initialize'):
+                            controller.initialize()
                         logger.info("Reconnected")
                         reconnect_to_device = False
                     else:
