@@ -69,6 +69,7 @@ def main(config_file):
 
     # do we need to initialize?
     if hasattr(controller, 'initialize'):
+        logger.info("Initializing controller...")
         controller.initialize()
 
     items = cfg['log_items']
@@ -190,6 +191,7 @@ def main(config_file):
                     if controller.is_connected():
                         # do we need to initialize?
                         if hasattr(controller, 'initialize'):
+                            logger.info("Initializing controller...")
                             controller.initialize()
                         logger.info("Reconnected")
                         reconnect_to_device = False
