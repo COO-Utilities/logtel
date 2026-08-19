@@ -159,6 +159,12 @@ def main(config_file):
                 db_client.close()
                 db_client = None
 
+                # Close device connection (if requested)
+                if 'disconnect' in cfg:
+                    if cfg['disconnect']:
+                        controller.disconnect()
+                        reconnect_to_device = True
+
             # Handle exceptions
             except ReadTimeoutError as e:
                 logger.critical("ReadTimeoutError: %s, will retry.", e)
