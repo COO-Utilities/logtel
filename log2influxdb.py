@@ -162,6 +162,7 @@ def main(config_file):
                 # Close device connection (if requested)
                 if 'disconnect' in cfg:
                     if cfg['disconnect']:
+                        logger.info("Disconnecting from device...")
                         controller.disconnect()
                         reconnect_to_device = True
 
