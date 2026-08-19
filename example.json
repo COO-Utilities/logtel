@@ -22,5 +22,6 @@
   "device_port": 23,
   "interval_secs": 30,
   "verbose": 1,
+  "disconnect": 0,
   "logfile": "blue_cal_srs.log"
 }
