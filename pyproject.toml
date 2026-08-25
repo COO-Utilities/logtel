@@ -22,6 +22,10 @@ dependencies = [
     "libximc",
     "pytest"
 ]
+
+[project.scripts]
+log2influxdb = "log2influxdb:main_cli"
+
 [tool.pytest.ini_options]
 pythonpath = [
     "."
