@@ -5,6 +5,7 @@ Assumes controller module has implemented the abstract methods in hardware_devic
 
 See https://github.com/COO-Utilities/hardware_device_base for more info.
 """
+import builtins
 import importlib
 import time
 import sys
@@ -94,7 +95,7 @@ def main(config_file):
                 write_api = db_client.write_api(write_options=SYNCHRONOUS)
 
                 for item in items:
-                    expected_type = getattr(__builtins__, items[item]['value_type'])
+                    expected_type = getattr(builtins, items[item]['value_type'])
                     # Universal getter
                     value = controller.get_atomic_value(item)
                     # Deal with a list of values
