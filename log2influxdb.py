@@ -215,8 +215,13 @@ def main(config_file):
         controller.disconnect()
 
 
-if __name__ == "__main__":
+def main_cli():
+    """Entry point for the log2influxdb console script."""
     if len(sys.argv) < 2:
-        print("Usage: python log2influxdb.py <your_edited_configuration.json>")
+        print("Usage: log2influxdb <your_edited_configuration.json>")
         sys.exit(0)
     main(sys.argv[1])
+
+
+if __name__ == "__main__":
+    main_cli()
